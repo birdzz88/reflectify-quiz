@@ -1,4 +1,4 @@
-<!DOCTYPE  html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
@@ -26,13 +26,12 @@
         <div class="absolute -top-24 -right-24 w-64 h-64 bg-pink-100/60 rounded-full blur-3xl pointer-events-none"></div>
         <div class="absolute -bottom-24 -left-24 w-64 h-64 bg-purple-100/60 rounded-full blur-3xl pointer-events-none"></div>
 
-        <!-- Header with Miro Branding Image & QR Trigger Button -->
         <header class="text-center mb-6 relative">
-            <button onclick="openQRModal()" class="absolute top-0 right-0 bg-pink-50/80 hover:bg-pink-100 border border-pink-200/60 text-pink-600 hover:text-pink-700 p-2.5 rounded-xl transition cursor-pointer flex items-center gap-1.5 text-xs font-semibold shadow-2xs" title="Get QR Code">
+            <button onclick="openQRModal()" class="absolute top-0 right-0 bg-pink-50/80 hover:bg-pink-100 border border-pink-200/60 text-pink-600 hover:text-pink-700 p-2.5 rounded-xl transition cursor-pointer flex items-center gap-1.5 text-xs font-semibold shadow-2xs" title="Get Scannable QR Code">
                 <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v1m6 11h2m-6 0h-2v4m0-11v3m0 0h.01M12 12h4.01M16 20h4M4 12h4m12 0h.01M5 8h2a1 1 0 001-1V5a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1zm12 0h2a1 1 0 001-1V5a1 1 0 00-1-1h-2a1 1 0 00-1 1v2a1 1 0 001 1zM5 20h2a1 1 0 001-1v-2a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1z" />
                 </svg>
-                <span class="hidden sm:inline">QR Code</span>
+                <span class="hidden sm:inline">Phone QR Code</span>
             </button>
 
             <!-- Miro Branding Image -->
@@ -96,14 +95,23 @@
                     </svg>
                 </button>
                 <div class="text-2xl mb-1">📱</div>
-                <h3 class="text-lg font-bold text-slate-700 mb-1">Scan to Test Quiz</h3>
-                <p class="text-xs text-slate-400 mb-4">Point your phone camera to open this quiz instantly!</p>
+                <h3 class="text-lg font-bold text-slate-700 mb-1">Mobile QR Code</h3>
+                <p class="text-xs text-slate-400 mb-3">Paste your hosted link (Netlify/GitHub) below so phones can scan and open it successfully!</p>
                 
-                <div class="bg-purple-50/50 p-3 rounded-2xl inline-block shadow-inner mb-4 flex justify-center items-center border border-purple-100/60">
+                <!-- Custom Editable Link Input for Phones -->
+                <div class="mb-3 text-left">
+                    <label class="text-[10px] font-semibold text-slate-400 uppercase tracking-wider block mb-1">Live Hosting URL:</label>
+                    <div class="flex gap-1.5">
+                        <input type="text" id="custom-url-input" class="w-full text-xs bg-purple-50/50 border border-purple-200 rounded-xl px-3 py-2 text-slate-700 focus:outline-none focus:ring-2 focus:ring-pink-300 font-mono" placeholder="https://your-quiz.netlify.app" oninput="updateQRCode()" />
+                        <button onclick="resetDefaultUrl()" class="bg-purple-100 hover:bg-purple-200 text-purple-600 px-2.5 rounded-xl text-xs font-medium cursor-pointer transition" title="Reset to current">Auto</button>
+                    </div>
+                </div>
+
+                <div class="bg-purple-50/50 p-3 rounded-2xl inline-block shadow-inner mb-3 flex justify-center items-center border border-purple-100/60">
                     <img id="qrcode-img" src="" alt="QR Code" class="w-36 h-36 object-contain rounded-lg" />
                 </div>
 
-                <div class="text-xs font-mono text-pink-500 bg-purple-50 p-2 rounded-xl break-all border border-purple-100/60 select-all" id="qr-url-display">
+                <div class="text-[11px] font-mono text-pink-500 bg-purple-50 p-2 rounded-xl break-all border border-purple-100/60 select-all" id="qr-url-display">
                     Loading URL...
                 </div>
             </div>
@@ -184,15 +192,16 @@
             }
         ];
 
+        // Updated results mapping with exact requested filenames
         const resultsData = {
-            "RED": { image: "The heart.png" },
-            "PURPLE": { image: "The creator.png" },
-            "YELLOW": { image: "The sunshine.png" },
-            "BLUE": { image: "The calm.png" },
-            "ORANGE": { image: "The spark.png" },
-            "GREEN": { image: "The grounded.png" },
-            "SILVER": { image: "The anchor.png" },
-            "IRIDESCENT": { image: "The iridescant.png" }
+            "RED": { image: "red-heart.png" },
+            "PURPLE": { image: "The Creator .png" },
+            "YELLOW": { image: "The Sunshinepng" },
+            "BLUE": { image: "The Calm .png" },
+            "ORANGE": { image: "The Spark .png" },
+            "GREEN": { image: "The Grounder r.png" },
+            "SILVER": { image: "The Anchor .png" },
+            "IRIDESCENT": { image: "The iridesca.png" }
         };
 
         let currentQuestion = 0;
@@ -276,19 +285,35 @@
             const modal = document.getElementById('qr-modal');
             modal.classList.remove('hidden');
             
-            let currentUrl = window.location.href;
-            if (currentUrl.includes('about:blank') || currentUrl.startsWith('blob:') || currentUrl === '') {
-                currentUrl = "https://reflectify-sg.github.io/miro-carnival-quiz/";
+            const inputField = document.getElementById('custom-url-input');
+            if (!inputField.value || inputField.value.includes('about:blank') || inputField.value.startsWith('blob:')) {
+                let currentUrl = window.location.href;
+                if (currentUrl.includes('about:blank') || currentUrl.startsWith('blob:') || currentUrl === '') {
+                    currentUrl = "https://reflectify-sg.github.io/miro-carnival-quiz/";
+                }
+                inputField.value = currentUrl;
             }
-            
-            document.getElementById('qr-url-display').innerText = currentUrl;
-            
-            const qrImageUrl = `https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(currentUrl)}`;
-            document.getElementById('qrcode-img').src = qrImageUrl;
+            updateQRCode();
         }
 
         function closeQRModal() {
             document.getElementById('qr-modal').classList.add('hidden');
+        }
+
+        function resetDefaultUrl() {
+            let currentUrl = window.location.href;
+            if (currentUrl.includes('about:blank') || currentUrl.startsWith('blob:') || currentUrl === '') {
+                currentUrl = "https://reflectify-sg.github.io/miro-carnival-quiz/";
+            }
+            document.getElementById('custom-url-input').value = currentUrl;
+            updateQRCode();
+        }
+
+        function updateQRCode() {
+            const url = document.getElementById('custom-url-input').value.trim() || "https://reflectify-sg.github.io/miro-carnival-quiz/";
+            document.getElementById('qr-url-display').innerText = url;
+            const qrImageUrl = `https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(url)}`;
+            document.getElementById('qrcode-img').src = qrImageUrl;
         }
 
         // Initialize quiz on load
